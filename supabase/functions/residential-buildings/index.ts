@@ -109,7 +109,6 @@ Deno.serve(async (request) => {
     const features = payload.features
       .filter((feature: any) => feature?.geometry)
       .map((feature: any) => ({ feature, housingType: classifyHousingType(feature.properties ?? {}) }))
-      .filter((item: any) => item.housingType !== null)
       .slice(0, 250)
       .map((item: any) => ({
         type: "Feature",
