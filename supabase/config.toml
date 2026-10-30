@@ -1,0 +1,2 @@
+[functions.residential-buildings]
+verify_jwt = false
