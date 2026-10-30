@@ -87,9 +87,9 @@ begin
   end if;
 
   insert into public.building_reviews
-    (building_id, building_name, author_id, rating, noise_type, content, status)
+    (building_id, building_name, author_id, housing_type, rating, noise_type, content, status)
   values
-    (trim(p_building_id), trim(p_building_name), v_author_id, p_rating, p_noise_type, trim(p_content), 'pending')
+    (trim(p_building_id), trim(p_building_name), v_author_id, p_housing_type, p_rating, p_noise_type, trim(p_content), 'pending')
   returning id into v_review_id;
 
   if v_dong is not null or v_ho is not null then
