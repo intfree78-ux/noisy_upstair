@@ -6,12 +6,15 @@ create table if not exists public.building_reviews (
   building_id text not null check (char_length(building_id) between 1 and 200),
   building_name text not null check (char_length(building_name) between 1 and 200),
   author_id uuid not null references auth.users(id) on delete cascade,
+  housing_type text check (housing_type is null or housing_type in ('아파트', '빌라', '원룸', '오피스텔')),
   rating smallint not null check (rating between 1 and 5),
   noise_type text not null check (noise_type in ('footsteps', 'music', 'construction', 'road', 'other', 'quiet')),
   content text not null check (char_length(content) between 10 and 500),
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at timestamptz not null default now()
 );
+
+alter table public.building_reviews add column if not exists housing_type text check (housing_type is null or housing_type in ('아파트', '빌라', '원룸', '오피스텔'));
 
 create index if not exists building_reviews_public_lookup
   on public.building_reviews (building_id, status, created_at desc);
@@ -36,13 +39,14 @@ to anon, authenticated
 using (status = 'approved' or (auth.uid() is not null and author_id = auth.uid()));
 
 revoke all on public.building_reviews from anon, authenticated;
-grant select (id, building_id, building_name, rating, noise_type, content, status, created_at)
+grant select (id, building_id, building_name, housing_type, rating, noise_type, content, status, created_at)
 on public.building_reviews to anon, authenticated;
 revoke all on public.building_review_units from anon, authenticated;
 
 create or replace function public.submit_building_review(
   p_building_id text,
   p_building_name text,
+  p_housing_type text,
   p_dong text,
   p_ho text,
   p_rating integer,
@@ -65,6 +69,9 @@ begin
   end if;
   if p_building_id is null or char_length(trim(p_building_id)) not between 1 and 200 then
     raise exception '건물 정보를 확인할 수 없습니다.';
+  end if;
+  if p_housing_type not in ('아파트', '빌라', '원룸', '오피스텔') then
+    raise exception '주거 유형을 선택해 주세요.';
   end if;
   if p_building_name is null or char_length(trim(p_building_name)) not between 1 and 200 then
     raise exception '건물 이름을 확인해 주세요.';
@@ -94,5 +101,5 @@ begin
 end;
 $$;
 
-revoke all on function public.submit_building_review(text, text, text, text, integer, text, text) from public, anon;
-grant execute on function public.submit_building_review(text, text, text, text, integer, text, text) to authenticated;
+revoke all on function public.submit_building_review(text, text, text, text, text, integer, text, text) from public, anon;
+grant execute on function public.submit_building_review(text, text, text, text, text, integer, text, text) to authenticated;
