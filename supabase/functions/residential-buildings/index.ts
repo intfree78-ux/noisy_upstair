@@ -58,10 +58,12 @@ Deno.serve(async (request) => {
   const south = Number(url.searchParams.get("south"));
   const east = Number(url.searchParams.get("east"));
   const north = Number(url.searchParams.get("north"));
-  if (![west, south, east, north].every(Number.isFinite) ||
+  const mapLevel = Number(url.searchParams.get("level"));
+  if (![west, south, east, north, mapLevel].every(Number.isFinite) ||
+      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 5 ||
       west < 124 || east > 132 || south < 32 || north > 39 ||
       west >= east || south >= north || east - west > 0.7 || north - south > 0.5) {
-    return json({ error: "지도 범위를 확인해 주세요. 지도를 더 확대해서 조회해 주세요." }, 400);
+    return json({ error: "건물 조회는 지도 축척 100m 이하의 현재 화면 범위에서만 가능합니다." }, 400);
   }
 
   const apiKey = Deno.env.get("VWORLD_API_KEY");
@@ -79,13 +81,13 @@ Deno.serve(async (request) => {
     BBOX: [minX, minY, maxX, maxY].join(","),
     SRSNAME: "EPSG:900913",
     outputFormat: "application/json",
-    MAXFEATURES: "1000",
+    MAXFEATURES: "250",
   });
 
   try {
     const upstream = await fetch("https://api.vworld.kr/req/wfs?" + query.toString(), {
       headers: { Accept: "application/json", Referer: allowedOrigin + "/" },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(12000)]),
     });
     const text = await upstream.text();
     if (!upstream.ok) return json({ error: "브이월드 조회에 실패했습니다.", status: upstream.status }, 502);
@@ -107,7 +109,7 @@ Deno.serve(async (request) => {
       .filter((feature: any) => feature?.geometry)
       .map((feature: any) => ({ feature, useStatus: classifyBuildingUse(feature.properties ?? {}) }))
       .filter((item: any) => item.useStatus !== "other")
-      .slice(0, 500)
+      .slice(0, 250)
       .map((item: any) => ({
         type: "Feature",
         id: String(item.feature.id ?? item.feature.properties?.bd_mgt_sn ?? item.feature.properties?.bldg_id ?? item.feature.properties?.buld_id ?? ""),
