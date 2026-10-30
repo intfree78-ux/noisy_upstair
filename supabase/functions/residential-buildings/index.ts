@@ -60,11 +60,14 @@ Deno.serve(async (request) => {
   const east = Number(url.searchParams.get("east"));
   const north = Number(url.searchParams.get("north"));
   const mapLevel = Number(url.searchParams.get("level"));
+  const midLat = (south + north) / 2;
+  const widthMeters = (east - west) * 111320 * Math.cos(midLat * Math.PI / 180);
+  const heightMeters = (north - south) * 111320;
   if (![west, south, east, north, mapLevel].every(Number.isFinite) ||
-      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 4 ||
+      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 3 ||
       west < 124 || east > 132 || south < 32 || north > 39 ||
-      west >= east || south >= north || east - west > 0.7 || north - south > 0.5) {
-    return json({ error: "건물 조회는 지도 축척 100m 이하의 현재 화면 범위에서만 가능합니다." }, 400);
+      west >= east || south >= north || widthMeters > 700 || heightMeters > 700) {
+    return json({ error: "건물 조회는 지도 축척 50m 이하, 화면 가로·세로 700m 이내에서만 가능합니다." }, 400);
   }
 
   const apiKey = Deno.env.get("VWORLD_API_KEY");
@@ -82,7 +85,7 @@ Deno.serve(async (request) => {
     BBOX: [minX, minY, maxX, maxY].join(","),
     SRSNAME: "EPSG:900913",
     outputFormat: "application/json",
-    MAXFEATURES: "250",
+    MAXFEATURES: "120",
   });
 
   try {
@@ -109,7 +112,7 @@ Deno.serve(async (request) => {
     const features = payload.features
       .filter((feature: any) => feature?.geometry)
       .map((feature: any) => ({ feature, housingType: classifyHousingType(feature.properties ?? {}) }))
-      .slice(0, 250)
+      .slice(0, 120)
       .map((item: any) => ({
         type: "Feature",
         id: String(item.feature.id ?? item.feature.properties?.bd_mgt_sn ?? item.feature.properties?.bldg_id ?? item.feature.properties?.buld_id ?? ""),
