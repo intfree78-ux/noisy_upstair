@@ -35,16 +35,17 @@ function reprojectCoordinates(value: unknown): unknown {
   return value.map(reprojectCoordinates);
 }
 
-function classifyBuildingUse(properties: Record<string, unknown>): "residential" | "other" | "unknown" {
-  const useEntries = Object.entries(properties)
-    .filter(([key, value]) => /purps|purpose|usability|usage|main.*use/i.test(key) && value != null && String(value).trim() !== "");
-  const useValues = useEntries.map(([, value]) => String(value).trim());
-  if (useValues.some(value => /아파트|연립|다세대|다가구|단독주택|공동주택|주거|기숙사/.test(value))) return "residential";
-  const residentialCode = Object.entries(properties).some(([key, value]) =>
-    /main.*purps.*cd|main.*use.*cd/i.test(key) && /^(01000|02000|0100|0200)$/.test(String(value ?? "").trim())
-  );
-  if (residentialCode) return "residential";
-  return useValues.length ? "other" : "unknown";
+function classifyHousingType(properties: Record<string, unknown>): "아파트" | "빌라" | "원룸" | "오피스텔" | null {
+  const sourceValues = Object.entries(properties)
+    .filter(([key, value]) => /name|purps|purpose|usability|usage|main.*use|type|bldg|buld/i.test(key) && value != null)
+    .map(([, value]) => String(value).trim())
+    .filter(Boolean);
+  const description = sourceValues.join(" ");
+  if (/오피스텔/.test(description)) return "오피스텔";
+  if (/연립주택|다세대주택|빌라/.test(description)) return "빌라";
+  if (/원룸|다중주택|다가구주택/.test(description)) return "원룸";
+  if (/아파트/.test(description)) return "아파트";
+  return null;
 }
 
 Deno.serve(async (request) => {
@@ -107,8 +108,8 @@ Deno.serve(async (request) => {
 
     const features = payload.features
       .filter((feature: any) => feature?.geometry)
-      .map((feature: any) => ({ feature, useStatus: classifyBuildingUse(feature.properties ?? {}) }))
-      .filter((item: any) => item.useStatus !== "other")
+      .map((feature: any) => ({ feature, housingType: classifyHousingType(feature.properties ?? {}) }))
+      .filter((item: any) => item.housingType !== null)
       .slice(0, 250)
       .map((item: any) => ({
         type: "Feature",
@@ -117,7 +118,7 @@ Deno.serve(async (request) => {
           ...item.feature.geometry,
           coordinates: reprojectCoordinates(item.feature.geometry.coordinates),
         },
-        properties: { ...(item.feature.properties ?? {}), _residential_status: item.useStatus },
+        properties: { ...(item.feature.properties ?? {}), _housing_type: item.housingType },
       }));
 
     return json({ type: "FeatureCollection", features, count: features.length });
