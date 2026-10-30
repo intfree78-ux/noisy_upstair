@@ -60,7 +60,7 @@ Deno.serve(async (request) => {
   const north = Number(url.searchParams.get("north"));
   const mapLevel = Number(url.searchParams.get("level"));
   if (![west, south, east, north, mapLevel].every(Number.isFinite) ||
-      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 5 ||
+      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 4 ||
       west < 124 || east > 132 || south < 32 || north > 39 ||
       west >= east || south >= north || east - west > 0.7 || north - south > 0.5) {
     return json({ error: "건물 조회는 지도 축척 100m 이하의 현재 화면 범위에서만 가능합니다." }, 400);
