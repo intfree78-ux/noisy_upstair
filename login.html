@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f4">
+  <title>로그인 — 고요</title>
+  <meta name="description" content="고요에 로그인해 주거지 후기를 남겨보세요.">
+  <style>
+    :root{--ink:#18251f;--muted:#77827b;--line:#e6eae5;--bg:#f5f7f4;--green:#23795b;--shadow:0 16px 44px rgba(28,50,39,.10)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#e7efe7 0,transparent 52%),var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;letter-spacing:-.025em}
+    a{color:inherit}
+    .topbar{height:72px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 5vw;backdrop-filter:blur(12px)}
+    .brand{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:850;letter-spacing:-.06em;text-decoration:none}
+    .brand-mark{width:32px;height:32px;border-radius:11px;background:var(--green);display:grid;place-items:center;color:white;font-size:18px}
+    main{min-height:calc(100vh - 72px);display:grid;place-items:center;padding:32px 18px}
+    .card{width:min(440px,100%);padding:34px;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+    .eyebrow{color:var(--green);font-size:11px;font-weight:850;letter-spacing:.14em;margin:0 0 10px}
+    h1{font-size:29px;letter-spacing:-.06em;margin:0}
+    .intro{font-size:14px;line-height:1.65;color:#68756c;margin:12px 0 24px}
+    label{display:block;font-size:12px;font-weight:800;margin-bottom:8px}
+    input{width:100%;height:48px;padding:0 13px;border:1px solid var(--line);border-radius:12px;font:inherit;outline:none}
+    input:focus{border-color:#78ad92;box-shadow:0 0 0 3px #23795b17}
+    button{width:100%;margin-top:13px;height:48px;border:0;border-radius:12px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    .status{min-height:24px;margin:14px 0 0;font-size:13px;line-height:1.55;color:#68756c}
+    .status.error{color:#a34f43}
+    .back{display:block;text-align:center;margin-top:20px;color:#68756c;font-size:13px;text-decoration:none}
+    .back:hover{color:var(--green)}
+    @media(max-width:480px){.topbar{padding:0 18px}.card{padding:26px 22px}h1{font-size:26px}}
+  </style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="./" aria-label="고요 홈으로"><span class="brand-mark">⌁</span> 고요</a></header>
+<main>
+  <section class="card" aria-labelledby="login-title">
+    <p class="eyebrow">QUIET LIVING, TOGETHER</p>
+    <h1 id="login-title">로그인하고 후기를 남겨보세요</h1>
+    <p class="intro">이메일로 안전한 로그인 링크를 보내드려요. 링크를 누르면 고요 홈페이지로 돌아옵니다.</p>
+    <form id="login-form">
+      <label for="email">이메일 주소</label>
+      <input id="email" type="email" name="email" autocomplete="email" placeholder="name@example.com" required>
+      <button id="send-link" type="submit">로그인 링크 받기</button>
+    </form>
+    <p class="status" id="status" role="status" aria-live="polite">계정이 없어도 이메일로 시작할 수 있어요.</p>
+    <a class="back" href="./">← 홈페이지로 돌아가기</a>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://ardhdvnsapvxproknqpr.supabase.co';
+const SUPABASE_KEY='sb_publishable_Q2rZ5v2j828YuFBKKx5RcQ_kKZtjuZV';
+const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})||null;
+const homeUrl=new URL('./',window.location.href).href;
+const form=document.getElementById('login-form');
+const statusText=document.getElementById('status');
+const sendButton=document.getElementById('send-link');
+function setStatus(message,isError=false){statusText.textContent=message;statusText.classList.toggle('error',isError)}
+if(!supabaseClient){setStatus('로그인 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',true);sendButton.disabled=true}
+else{supabaseClient.auth.getSession().then(({data,error})=>{if(error){setStatus('로그인 상태를 확인하지 못했습니다. 다시 시도해 주세요.',true);return}if(data.session){setStatus('이미 로그인되어 있습니다. 홈페이지로 이동해 후기를 이용할 수 있어요.');form.hidden=true}})}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!supabaseClient)return;
+  const email=document.getElementById('email').value.trim();
+  if(!email)return;
+  sendButton.disabled=true;
+  setStatus('로그인 링크를 보내는 중…');
+  const {error}=await supabaseClient.auth.signInWithOtp({email,options:{emailRedirectTo:homeUrl}});
+  sendButton.disabled=false;
+  if(error){setStatus('로그인 링크를 보내지 못했습니다: '+error.message,true);return}
+  setStatus('이메일로 로그인 링크를 보냈습니다. 메일을 열어 로그인을 완료해 주세요.');
+});
+</script>
+</body>
+</html>
