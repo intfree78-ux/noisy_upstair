@@ -88,7 +88,8 @@ const SUPABASE_URL='https://ardhdvnsapvxproknqpr.supabase.co';
 const SUPABASE_KEY='sb_publishable_Q2rZ5v2j828YuFBKKx5RcQ_kKZtjuZV';
 const KAKAO_JS_KEY='0a75b4ff6e55316759c41d81f3b62e59';
 const data=[];
-let map=null,markers={},buildingOverlays=[],buildingTimer=null,buildingRequest=0,activeFilter='all',query='',selected=null,activeBuilding=null,authSession=null;\nconst supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})||null;
+let map=null,markers={},buildingOverlays=[],buildingTimer=null,buildingRequest=0,activeFilter='all',query='',selected=null,activeBuilding=null,authSession=null;
+const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})||null;
 const typeLabel={footsteps:'발걸음',music:'음악·TV',construction:'공사 소음',road:'도로 소음',other:'기타 소음',quiet:'조용한 편'};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function pinClass(s){return s==null?'empty':s<2.5?'':s<3.5?'mid':'low'}
