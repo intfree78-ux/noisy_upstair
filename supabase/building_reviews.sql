@@ -36,7 +36,7 @@ to anon, authenticated
 using (status = 'approved' or (auth.uid() is not null and author_id = auth.uid()));
 
 revoke all on public.building_reviews from anon, authenticated;
-grant select (id, building_id, building_name, author_id, rating, noise_type, content, status, created_at)
+grant select (id, building_id, building_name, rating, noise_type, content, status, created_at)
 on public.building_reviews to anon, authenticated;
 revoke all on public.building_review_units from anon, authenticated;
 
