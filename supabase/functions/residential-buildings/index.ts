@@ -102,6 +102,8 @@ Deno.serve(async (request) => {
       return json({ error: "브이월드 응답에 건물 피처가 없습니다.", detail: payload.Exception?.text ?? payload.error ?? null }, 502);
     }
 
+    console.log("vworld-wfs-result", JSON.stringify({ total: payload.features.length, sampleProperties: payload.features.slice(0, 2).map((feature: any) => feature.properties ?? {}) }));
+
     const features = payload.features
       .filter((feature: any) => feature?.geometry && isResidential(feature.properties ?? {}))
       .slice(0, 500)
