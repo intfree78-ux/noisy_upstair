@@ -77,7 +77,7 @@ Deno.serve(async (request) => {
     typeName: "lt_c_bldginfo",
     BBOX: [minX, minY, maxX, maxY].join(","),
     SRSNAME: "EPSG:900913",
-    OUTPUT: "application/json",
+    outputFormat: "application/json",
     MAXFEATURES: "1000",
   });
 
