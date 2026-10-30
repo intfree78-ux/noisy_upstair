@@ -31,8 +31,8 @@
 
 1. Supabase SQL Editor에서 [supabase/building_reviews.sql](supabase/building_reviews.sql)을 실행합니다.
 2. Supabase **Authentication → URL Configuration**의 Redirect URLs에 `https://intfree78-ux.github.io/noisy_upstair/`를 추가합니다.
-3. Authentication의 이메일 로그인 링크를 활성화합니다. 사용자는 로그인 링크를 받은 뒤 건물 후기를 등록할 수 있습니다.
-- 상단의 로그인 버튼과 `login.html`에서 이메일 로그인 링크를 받을 수 있습니다. 로고를 누르면 홈페이지로 돌아옵니다.
+3. Authentication의 이메일 로그인 링크를 활성화합니다. 사용자는 상단의 로그인 버튼 또는 `login.html`에서 이메일 로그인 링크를 받을 수 있습니다. 로고를 누르면 홈페이지로 돌아옵니다.
+4. 등록된 후기는 `pending` 상태로 저장됩니다. SQL Editor에서 검토한 후 승인하면 공개됩니다. 예: `update public.building_reviews set status = 'approved' where id = '<후기 UUID>';`
 4. 등록된 후기는 `pending` 상태로 저장됩니다. SQL Editor에서 검토한 후 승인하면 공개됩니다. 예: `update public.building_reviews set status = 'approved' where id = '<후기 UUID>';`
 
 동·호 정보는 별도의 비공개 테이블에 저장되며 공개 후기 목록에는 나오지 않습니다. 지도에서 선택한 건물의 승인 후기와 본인이 작성한 검토 중 후기만 볼 수 있습니다.
