@@ -91,7 +91,13 @@ Deno.serve(async (request) => {
 
     let payload: any;
     try { payload = JSON.parse(text); }
-    catch { return json({ error: "브이월드 응답을 읽을 수 없습니다. WFS 권한과 인증키를 확인해 주세요." }, 502); }
+    catch {
+      const marker = "<ServiceException";
+      const start = text.indexOf(marker);
+      const tagEnd = start >= 0 ? text.indexOf(">", start) : -1;
+      const detail = tagEnd >= 0 ? text.slice(tagEnd + 1).split("</ServiceException>")[0].trim().slice(0, 220) : "응답 형식을 확인해 주세요."; 
+      return json({ error: "브이월드 WFS 오류: " + detail }, 502);
+    }
     if (!Array.isArray(payload.features)) {
       return json({ error: "브이월드 응답에 건물 피처가 없습니다.", detail: payload.Exception?.text ?? payload.error ?? null }, 502);
     }
