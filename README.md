@@ -6,7 +6,8 @@
 
 - GitHub Pages: 홈페이지 배포
 - Kakao Maps JavaScript API: 지도 및 주거지 마커
-- Supabase: 주거지·후기 데이터 조회
+- Supabase: 주거지·후기 데이터 조회 및 VWorld 건물정보 프록시
+- VWorld WFS: 지도 화면 범위의 건축물 공간정보
 
 ## 처음 설정하기
 
@@ -17,6 +18,14 @@
 5. JavaScript SDK 도메인에 배포 주소와 로컬 개발 주소를 등록합니다. GitHub Pages 기본 주소는 `https://intfree78-ux.github.io`입니다.
 6. 발급한 JavaScript 키를 `index.html`의 `KAKAO_JS_KEY`에 넣습니다.
 7. GitHub 저장소의 **Settings → Pages**에서 `main` 브랜치, 루트 폴더를 배포 대상으로 선택합니다.
+
+## 전국 주거 건물 데이터 연결
+
+1. Supabase Edge Functions에서 `VWORLD_API_KEY` secret을 설정합니다.
+2. Supabase CLI로 저장소 루트에서 `supabase functions deploy residential-buildings --project-ref ardhdvnsapvxproknqpr`를 실행합니다. (또는 Supabase 대시보드의 Edge Functions 편집기에 `supabase/functions/residential-buildings/index.ts` 내용을 배포합니다.)
+3. Kakao 지도에서 확대 레벨 5 이하로 확대하거나 지도를 이동하면 현재 화면 범위의 주거용 건물 폴리곤을 조회합니다.
+
+이 기능은 브이월드 건물 통합정보를 서버 함수가 조회해 반환합니다. VWorld 운영 단계는 이용 심의가 필요할 수 있으므로 공개 운영 전에 이용 승인을 확인하세요. 지도 표시 여부는 해당 범위의 데이터와 API 키 권한에 따라 달라집니다.
 
 ## 데이터 동작
 
