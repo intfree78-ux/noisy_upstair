@@ -35,15 +35,16 @@ function reprojectCoordinates(value: unknown): unknown {
   return value.map(reprojectCoordinates);
 }
 
-function isResidential(properties: Record<string, unknown>): boolean {
-  const useValues = Object.entries(properties)
-    .filter(([key]) => /purps|purpose|use|usage/i.test(key))
-    .map(([, value]) => String(value ?? "").trim())
-    .filter(Boolean);
-  if (useValues.some(value => /아파트|연립|다세대|다가구|단독주택|공동주택|주거|기숙사/.test(value))) return true;
-  return Object.entries(properties).some(([key, value]) =>
+function classifyBuildingUse(properties: Record<string, unknown>): "residential" | "other" | "unknown" {
+  const useEntries = Object.entries(properties)
+    .filter(([key, value]) => /purps|purpose|usability|usage|main.*use/i.test(key) && value != null && String(value).trim() !== "");
+  const useValues = useEntries.map(([, value]) => String(value).trim());
+  if (useValues.some(value => /아파트|연립|다세대|다가구|단독주택|공동주택|주거|기숙사/.test(value))) return "residential";
+  const residentialCode = Object.entries(properties).some(([key, value]) =>
     /main.*purps.*cd|main.*use.*cd/i.test(key) && /^(01000|02000|0100|0200)$/.test(String(value ?? "").trim())
   );
+  if (residentialCode) return "residential";
+  return useValues.length ? "other" : "unknown";
 }
 
 Deno.serve(async (request) => {
@@ -102,19 +103,19 @@ Deno.serve(async (request) => {
       return json({ error: "브이월드 응답에 건물 피처가 없습니다.", detail: payload.Exception?.text ?? payload.error ?? null }, 502);
     }
 
-    console.log("vworld-wfs-result", JSON.stringify({ total: payload.features.length, sampleProperties: payload.features.slice(0, 2).map((feature: any) => feature.properties ?? {}) }));
-
     const features = payload.features
-      .filter((feature: any) => feature?.geometry && isResidential(feature.properties ?? {}))
+      .filter((feature: any) => feature?.geometry)
+      .map((feature: any) => ({ feature, useStatus: classifyBuildingUse(feature.properties ?? {}) }))
+      .filter((item: any) => item.useStatus !== "other")
       .slice(0, 500)
-      .map((feature: any) => ({
+      .map((item: any) => ({
         type: "Feature",
-        id: String(feature.id ?? feature.properties?.bldg_id ?? feature.properties?.buld_id ?? ""),
+        id: String(item.feature.id ?? item.feature.properties?.bd_mgt_sn ?? item.feature.properties?.bldg_id ?? item.feature.properties?.buld_id ?? ""),
         geometry: {
-          ...feature.geometry,
-          coordinates: reprojectCoordinates(feature.geometry.coordinates),
+          ...item.feature.geometry,
+          coordinates: reprojectCoordinates(item.feature.geometry.coordinates),
         },
-        properties: feature.properties ?? {},
+        properties: { ...(item.feature.properties ?? {}), _residential_status: item.useStatus },
       }));
 
     return json({ type: "FeatureCollection", features, count: features.length });
