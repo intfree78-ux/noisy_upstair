@@ -64,10 +64,10 @@ Deno.serve(async (request) => {
   const widthMeters = (east - west) * 111320 * Math.cos(midLat * Math.PI / 180);
   const heightMeters = (north - south) * 111320;
   if (![west, south, east, north, mapLevel].every(Number.isFinite) ||
-      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 3 ||
+      !Number.isInteger(mapLevel) || mapLevel < 1 || mapLevel > 4 ||
       west < 124 || east > 132 || south < 32 || north > 39 ||
       west >= east || south >= north || widthMeters > 700 || heightMeters > 700) {
-    return json({ error: "건물 조회는 지도 축척 50m 이하, 화면 가로·세로 700m 이내에서만 가능합니다." }, 400);
+    return json({ error: "건물 조회는 지도 축척 100m 이하, 화면 가로·세로 700m 이내에서만 가능합니다." }, 400);
   }
 
   const apiKey = Deno.env.get("VWORLD_API_KEY");
