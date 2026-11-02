@@ -145,3 +145,5 @@ const modal=document.getElementById('modal');document.getElementById('open-revie
 
 
 
+
+<script>(function(){const adminLink=[...document.querySelectorAll('.nav a')].find(link=>link.getAttribute('href')==='./admin.html');if(!adminLink)return;adminLink.hidden=true;if(!supabaseClient)return;const checkAdmin=async session=>{adminLink.hidden=true;if(!session)return;try{const {data,error}=await supabaseClient.rpc('is_site_admin');if(authSession?.user?.id===session.user.id)adminLink.hidden=!!error||data!==true}catch(_){adminLink.hidden=true}};supabaseClient.auth.getSession().then(({data})=>checkAdmin(data.session));supabaseClient.auth.onAuthStateChange((_event,session)=>setTimeout(()=>checkAdmin(session),0))})();</script>
