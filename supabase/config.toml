@@ -1,2 +1,5 @@
 [functions.residential-buildings]
 verify_jwt = false
+
+[functions.naver-userinfo]
+verify_jwt = false
